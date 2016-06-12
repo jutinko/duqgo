@@ -26,7 +26,8 @@ func init() {
 func main() {
 	flag.Parse()
 	fmt.Printf("Win rate %+v\n", getInitialProjectedWinRate(teamA, teamB, initialOddsA, initialOddsB, initialOddsDraw))
-	isFeasibleBet(teamA, teamB, maxBet, getInitialProjectedWinRate(teamA, teamB, initialOddsA, initialOddsB, initialOddsDraw), currentOddsA, currentOddsB, currentOddsDraw)
+	strategy := getBestStrategy(teamA, teamB, maxBet, getInitialProjectedWinRate(teamA, teamB, initialOddsA, initialOddsB, initialOddsDraw), currentOddsA, currentOddsB, currentOddsDraw)
+	fmt.Printf("The best strategy %+v\n", strategy)
 }
 
 func getInitialProjectedWinRate(teamA, teamB string, initialOddsA, initialOddsB, initialOddsDraw float64) map[string]float64 {
@@ -39,9 +40,9 @@ func getInitialProjectedWinRate(teamA, teamB string, initialOddsA, initialOddsB,
 	return result
 }
 
-func isFeasibleBet(teamA, teamB string, maxBet int, projectedRate map[string]float64, currentOddsA, currentOddsB, currentOddsDraw float64) bool {
+func getBestStrategy(teamA, teamB string, maxBet int, projectedRate map[string]float64, currentOddsA, currentOddsB, currentOddsDraw float64) map[string]float64 {
 	var x, y int
-	var possible bool
+	result := make(map[string]float64)
 	maxBetF := float64(maxBet)
 	maxWin := 0.0
 
@@ -56,11 +57,14 @@ func isFeasibleBet(teamA, teamB string, maxBet int, projectedRate map[string]flo
 				projectedGain := projectedRate[teamA]*teamAWinGain + projectedRate[teamB]*teamBWinGain + projectedRate["draw"]*drawWinGain
 				if maxWin < projectedGain {
 					maxWin = projectedGain
+					result[teamA] = float64(x)
+					result[teamB] = float64(y)
+					result["draw"] = float64(maxBet - x - y)
 				}
 			}
 		}
 	}
 
-	println(maxWin)
-	return possible
+	fmt.Printf("Expected gain: %f\n", maxWin)
+	return result
 }
